@@ -1,0 +1,1 @@
+(ns rejure.store.manage)

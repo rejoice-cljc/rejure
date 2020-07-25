@@ -1,0 +1,3 @@
+{:deps {rejure/lang   {:local/root "./rejure-lang"}
+        rejure/router {:local/root "./rejure-router"}
+        rejure/store  {:local/root "./rejure-store"}}}
