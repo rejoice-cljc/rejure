@@ -1,11 +1,59 @@
 (ns rejure.store.context
-  #?(:cljs (:require ["recoil" :as recoil]))
+  #?(:cljs (:require
+            ["react" :as react]
+            ["recoil" :as recoil]))
   #?(:clj (:require [rejure.lang.symbol :as sym]))
   #?(:cljs (:require-macros [rejure.store.context])))
 
+;; == store context provider == 
+
+#?(:cljs 
+   (do
+     (def h* react/createElement)
+     (def context (react/createContext #js {}))
+
+     (defn call-inital-states
+       "Calls all initial states defined in `store` :init-map."
+       [store interface]
+       (.all js/Promise
+             (mapv (fn [[k f]]
+                     (let [state (get-in store [:state-map k])]
+                       (-> (.resolve js/Promise (f))
+                           (.then (fn [x] (.set interface state x))))))
+                   (:init-map store))))
+
+     (defn- StateInitializer [{:keys [children]}]
+       (let [store (react/useContext context)
+             [ready set-ready] (react/useState false)
+             init-state (recoil/useRecoilCallback
+                         (fn [interface]
+                           (fn [] (call-inital-states store interface)))
+                         #js [])]
+         (react/useEffect
+          (fn []
+            (-> (init-state)
+                (.then (fn [] (set-ready true))))
+            js/undefined)
+          #js [])
+         (and ready children)))
+
+     (defn provider [{:keys [store children]}]
+       (h*
+        (.-Provider context)
+        #js {:value store}
+        (h*
+         recoil/RecoilRoot
+         nil
+         (h*
+          StateInitializer
+          nil
+          children))))))
+
+;; == store context creator == 
+
 #?(:cljs
    (do
-     (defn store-value->recoil-value
+     (defn- store-value->recoil-value
        "Create recoil atom or selector for given key `k` and value `v`."
        [k v]
        (cond
