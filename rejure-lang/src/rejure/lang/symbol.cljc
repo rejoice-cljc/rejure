@@ -16,10 +16,29 @@
        (do
          (def x "foo")
          (info x)))
+
+     (defmacro deduce
+       "Like reduce, but any symbol is replaced with its resolved info."
+       [f init v]
+       (reduce
+        (fn [acc x]
+          `(~f ~acc ~(if (symbol? x) `(info ~x) x)))
+        init
+        v))
      
+     (comment
+       (def x :foo)
+       (def y :bar)
+
+       (deduce
+        (fn [acc x]
+          (assoc acc (:symbol x) (:value x)))
+        {}
+        [x y]))
+
      (defmacro vecplace
        "Replace vector of symbols with their resolved info. 
-        Can optionally pass `f` callback to transform each symbol's outputs."
+           Can optionally pass `f` callback to transform each symbol's outputs."
        ([v] `(vecplace identity ~v))
        ([f v]
         (reduce
