@@ -1,9 +1,38 @@
 (ns rejure.router.context
   (:require
-   #?@(:cljs [[clojure.string :as str]])
+   #?@(:cljs [[clojure.string :as str]
+              ["react" :as react]
+              ["react-router-dom" :as router]])
    #?@(:clj [[rejure.lang.symbol :as sym]]))
   #?(:cljs (:require-macros [rejure.router.context])))
 
+;; == store context components ==
+
+#?(:cljs
+   (do
+     (def h* react/createElement)
+     (def context (react/createContext {}))
+
+     (def RouterProvider #?(:desktop router/HashRouter
+                            :cljs router/BrowserRouter))
+
+     (defn provider "Router context provider."
+       [^js props]
+       (h*
+        (.-Provider context)
+        #js {:value (.-router props)}
+        (h*
+         RouterProvider
+         nil
+         (.-children props))))
+
+     (defn matcher "Route matcher."
+       []
+       (let [ctx (react/useContext context)]
+        (router/useRoutes (clj->js (:react-router/config ctx)))))))
+
+;; == store context factory == 
+ 
 #?(:cljs 
    (do
      (defn- normalize-path  "Normalize route path by removing any extra forward slashes."

@@ -5,12 +5,12 @@
   #?(:clj (:require [rejure.lang.symbol :as sym]))
   #?(:cljs (:require-macros [rejure.store.context])))
 
-;; == store context provider == 
+;; == store context components == 
 
 #?(:cljs 
    (do
      (def h* react/createElement)
-     (def context (react/createContext #js {}))
+     (def context (react/createContext {}))
 
      (defn call-inital-states
        "Calls all initial states defined in `store` :init-map."
@@ -22,7 +22,7 @@
                            (.then (fn [x] (.set interface state x))))))
                    (:init-map store))))
 
-     (defn- StateInitializer [{:keys [children]}]
+     (defn- StateInitializer [props]
        (let [store (react/useContext context)
              [ready set-ready] (react/useState false)
              init-state (recoil/useRecoilCallback
@@ -35,21 +35,21 @@
                 (.then (fn [] (set-ready true))))
             js/undefined)
           #js [])
-         (and ready children)))
+         (and ready (.-children props))))
 
-     (defn provider [{:keys [store children]}]
+     (defn provider [^js props]
        (h*
         (.-Provider context)
-        #js {:value store}
+        #js {:value (.-store props)}
         (h*
          recoil/RecoilRoot
          nil
          (h*
           StateInitializer
           nil
-          children))))))
+          (.-children props)))))))
 
-;; == store context creator == 
+;; == store context factory == 
 
 #?(:cljs
    (do
@@ -63,8 +63,8 @@
                                     :default (:default v)})
          :else v))
 
-     (defn create-context*
-       "Create store context from `stores-map`."
+     (defn create-store*
+       "Create store from `stores-map`."
        [stores-map]
        (reduce-kv
         (fn [acc k {:keys [values dispatch-fn]}]
@@ -89,11 +89,11 @@
         stores-map))
 
      (comment
-       (create-context*
+       (create-store*
         {::state1 {:values {::all1 []}
                    :dispatch-fn identity}})
 
-       (create-context*
+       (create-store*
         {::state1 {:values {::all1 []}
                    :dispatch-fn identity}
          ::states2 {:values {::all2 []}
@@ -115,13 +115,12 @@
        (store-syms->stores-map
         [x]))
 
-     (defmacro create-context
+     (defmacro create-store
        [store-syms]
        `(let [stores-map# (store-syms->stores-map ~store-syms)]
-          (create-context* stores-map#)))))
-
+          (create-store* stores-map#)))))
 
 (comment
   (def store {:values {} :dispatch-fn identity})
-  (create-context
+  (create-store
    [store]))
