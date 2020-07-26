@@ -49,7 +49,6 @@
         (fn [acc {:keys [meta] :as rt-info}]
           (let [rt-key (keyword (get-route-subns (:route-subns cfg) (:ns meta)))
                 rt-parent-keys  (get-route-parent-keys rt-key)]
-            (println "rt" rt-key rt-parent-keys)
             (assoc acc rt-key (resolve-route-path acc rt-parent-keys rt-info))))
         {}
         ;; note: routes info must be sorted so that accum map passed to children already has its parent route paths.
@@ -59,7 +58,6 @@
        "Creates React Router routes configuraiton from vector of routes info `rts-info`.
         Requires element factory `el-fac` for turning route components into elements."
        [el-fac rts-info]
-       (println "creatng routes")
        (reduce
         (fn [acc x]
           (letfn [(route
@@ -80,9 +78,8 @@
    (defmacro create-context
      [rts-syms cfg]
      `(let [rts-info# (sym/vecplace ~rts-syms)]
-        {:routes-config (routes-info->routes-config ~(:create-element cfg) rts-info#)
-         :routes-paths  (routes-info->routes-paths ~cfg rts-info#)})))
-
+        {:react-router/config (routes-info->routes-config ~(:create-element cfg) rts-info#)
+         :paths (routes-info->routes-paths ~cfg rts-info#)})))
 
  (comment
    (def ^{:route/path "/"} rt :route)
