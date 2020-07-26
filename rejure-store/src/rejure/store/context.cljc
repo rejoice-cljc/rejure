@@ -17,7 +17,7 @@
        [store interface]
        (.all js/Promise
              (mapv (fn [[k f]]
-                     (let [state (get-in store [:state-map k])]
+                     (let [state (get-in store [:values-map k])]
                        (-> (.resolve js/Promise (f))
                            (.then (fn [x] (.set interface state x))))))
                    (:init-map store))))
@@ -67,7 +67,7 @@
        "Create store context from `stores-map`."
        [stores-map]
        (reduce-kv
-        (fn [acc k {:keys [state dispatch-fn]}]
+        (fn [acc k {:keys [values dispatch-fn]}]
           {:init-map  (merge (:init-map acc)
                              (reduce-kv
                               (fn [acc k v]
@@ -75,29 +75,29 @@
                                   (assoc acc k (:initial v))
                                   acc))
                               {}
-                              state))
-           :state-map (merge (:state-map acc)
+                              values))
+           :values-map (merge (:values-map acc)
                              (reduce-kv
                               (fn [acc sk sv]
                                 (assoc acc sk (store-value->recoil-value sk sv)))
                               {}
-                              state))
+                              values))
            :dispatch-map (assoc (:dispatch-map acc) k dispatch-fn)})
         {:init-map    {}
-         :state-map   {}
+         :values-map   {}
          :distach-map {}}
         stores-map))
 
      (comment
        (create-context*
-        {::store1 {:state {::all1 []}
+        {::state1 {:values {::all1 []}
                    :dispatch-fn identity}})
 
        (create-context*
-        {::store1 {:state {::all1 []}
+        {::state1 {:values {::all1 []}
                    :dispatch-fn identity}
-         ::store2 {:state {::all2 []}
-                   :dispatch-fn identity}}))))
+         ::states2 {:values {::all2 []}
+                    :dispatch-fn identity}}))))
 
 #?(:clj
    (do
@@ -122,6 +122,6 @@
 
 
 (comment
-  (def store {:state {} :dispatch-fn identity})
+  (def store {:values {} :dispatch-fn identity})
   (create-context
    [store]))
