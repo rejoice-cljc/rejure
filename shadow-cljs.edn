@@ -1,0 +1,10 @@
+{:deps  {:aliases [:local]}
+ 
+ :builds 
+ {:demo 
+  {:target :browser
+   :asset-path "js"
+   :modules {:main {:entries [demo.app]}}
+   :devtools {:http-root "public"
+              :http-port 4444
+              :preloads [devtools.preload]}}}}
