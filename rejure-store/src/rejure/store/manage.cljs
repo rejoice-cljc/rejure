@@ -14,7 +14,7 @@
   (let [store (react/useContext stc/context)]
     (reduce
      (fn [acc k]
-       (let [state (get-in store [:state-map k])]
+       (let [state (get-in store [:values-map k])]
          (assoc acc k (recoil/useRecoilValue state))))
      {}
      ks)))
@@ -26,12 +26,14 @@
        (fn [multi input]
          (let [state-key  (first multi)
                store-key  (keyword (namespace state-key))
-               state      (get-in store [:state-map state-key])
+               state      (get-in store [:values-map state-key])
                dispatch   (get-in store [:dispatch-map store-key])]
-           (-> (.getPromise (.-snapshot interface) state)
-               (.then (fn [curr]
-                        (.set interface state (dispatch multi curr input))
-                        (async/put! event-chan [multi input])))))))
+           (if dispatch
+             (-> (.getPromise (.-snapshot interface) state)
+                 (.then (fn [curr]
+                          (.set interface state (dispatch multi curr input))
+                          (async/put! event-chan [multi input]))))
+             (throw (ex-info "State dispatch not found." {:key state-key}))))))
      #js [])))
 
 (defn use-keys+dispatch [ks]
