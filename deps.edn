@@ -1,4 +1,4 @@
-{:deps {rejure/lang   {:local/root "./rejure-lang"}
+{:deps {rejure/core   {:local/root "./rejure-core"}
         rejure/router {:local/root "./rejure-router"}
         rejure/store  {:local/root "./rejure-store"}}
 

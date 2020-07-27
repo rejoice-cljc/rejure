@@ -1,6 +1,6 @@
-(ns rejure.lang.symbol
+(ns rejure.symbol
   (:refer-clojure :exclude [info])
-  #?(:cljs (:require-macros [rejure.lang.symbol])))
+  #?(:cljs (:require-macros [rejure.symbol])))
  
 #?(:clj
    (do

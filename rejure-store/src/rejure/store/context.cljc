@@ -2,7 +2,7 @@
   #?(:cljs (:require
             ["react" :as react]
             ["recoil" :as recoil]))
-  #?(:clj (:require [rejure.lang.symbol :as sym]))
+  #?(:clj (:require [rejure.symbol :as sym]))
   #?(:cljs (:require-macros [rejure.store.context])))
 
 ;; == store context components == 

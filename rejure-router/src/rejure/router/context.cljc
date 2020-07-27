@@ -3,7 +3,7 @@
    #?@(:cljs [[clojure.string :as str]
               ["react" :as react]
               ["react-router-dom" :as router]])
-   #?@(:clj [[rejure.lang.symbol :as sym]]))
+   #?@(:clj [[rejure.symbol :as sym]]))
   #?(:cljs (:require-macros [rejure.router.context])))
 
 ;; == store context components ==
