@@ -53,7 +53,7 @@
 
 #?(:cljs
    (do
-     (defn- primitive? 
+     (defn- primitive?
        "Checks whether value `x` is a primitive type.
         For collections, only vectors are allowed, as any map field can be its an atom value."
        [x]
@@ -73,8 +73,15 @@
         #js {:key (keyword k)
              :default (if (primitive? v) v (:default v))}))
 
+     (defn get-data-source-output
+       [x output]
+       (cond
+         (keyword? output) (get x output)
+         (fn? output) (output x)
+         :else output))
+
      (defn- call-data-source
-       [data-sources query deps-map]
+       [data-sources deps-map query]
        (let [source-key  (first query)
              source-args (second query)]
          (if-let [f (get data-sources source-key)]
@@ -83,12 +90,14 @@
 
      (defn- value-selector->recoil-selector "Converts store selector value to recoil selector."
        [k m data-sources]
-       (let [{:keys [deps query]} m]
+       (let [{:keys [deps query output]} m]
          (recoil/selector
           #js {:key (keyword k)
                :get (fn [ctx]
                       (let [deps-map (reduce (fn [acc k] (assoc acc k (.get ctx k))) deps)]
-                        (call-data-source data-sources query deps-map)))})))
+                        (-> (->> (call-data-source data-sources deps-map query)
+                                 (.resolve js/Promise))
+                            (.then #(get-data-source-output % output)))))})))
 
      (defn- store-value->recoil-value
        "Create recoil atom or selector for given key `k` and value `v`."
@@ -151,7 +160,7 @@
        [store-syms]
        `(sym/deduce
          (fn [acc# info#]
-           (assoc acc# (ns-name (get-in info# [:meta :ns])) (:value info#)))
+           (assoc acc# (keyword (ns-name (get-in info# [:meta :ns]))) (:value info#)))
          {}
          ~store-syms))
 
