@@ -5,6 +5,13 @@
   #?(:clj (:require [rejure.symbol :as sym]))
   #?(:cljs (:require-macros [rejure.store.context])))
 
+#?(:cljs
+  ;; Recoil's main entry file dynamically imports its dev or prod bundle.
+  ;; This causes errors with Shadow-cljs requires, so Recoil's build file must be aliased.
+  ;; If Recoil's import object is empty, we'll throw an error to warn user of this.
+   (when (= (.-length (.keys js/Object recoil)) 0)
+     (throw "Unable to import recoil. Please make sure you've properly aliased its build file.")))
+
 ;; == store context components == 
 
 #?(:cljs
