@@ -1,10 +1,27 @@
-{:deps  {:aliases [:local]}
- 
- :builds 
- {:demo 
+{:deps  {:aliases [:local :test]}
+
+ :build-defaults
+ {:compiler-options {:output-feature-set :es6}
+
+  :dev
+  {:js-options
+   {:resolve
+    {"recoil" {:target :npm :require "recoil/dist/recoil.development"}}}}
+
+  :release
+  {:js-options
+   {:resolve
+    {"recoil" {:target :npm :require "recoil/dist/recoil.production"}}}}}
+
+ :builds
+ {:demo
   {:target :browser
    :asset-path "js"
    :modules {:main {:entries [demo.app]}}
-   :devtools {:http-root "public"
-              :http-port 4444
-              :preloads [devtools.preload]}}}}
+   :devtools {:http-root "demo/public"
+              preloads [devtools.preload]}}
+  :test
+  {:target    :node-test
+   :output-to "dist/test/unit-tests.js"
+   :ns-regexp "-test$"
+   :autorun   true}}}

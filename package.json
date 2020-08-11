@@ -1,6 +1,13 @@
 {
   "private": true,
   "devDependencies": {
-    "shadow-cljs": "^2.9.4"
+    "@testing-library/react-hooks": "^3.4.1",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "react-test-renderer": "^16.13.1",
+    "shadow-cljs": "^2.9.4",
+    "react-router": "^6.0.0-beta.0",
+    "react-router-dom": "^6.0.0-beta.0",
+    "recoil": "^0.0.10"
   }
 }
