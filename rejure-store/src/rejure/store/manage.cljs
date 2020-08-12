@@ -7,10 +7,26 @@
 
 (def event-chan (async/chan))
 
-(defn dispatcher "Multi-dispatch dispacther fn."
-  [multi _state _input] multi)
+;; todo 
+;; - remove :values for single :state (?)
+;; -put dispatch key in _ctx  map
+
+(defmulti reducer
+  (fn dispatcher [_curr [key _input]] 
+    (if (and (vector? key) (= (count key) 2))
+     key
+     (throw (ex-info "Invalid multi reducer." {:key key})))))
+
+(defmulti watcher
+  (fn dispatcher [_ctx [key _prev _next]]
+    key))
+
+(defmulti action
+  (fn dispatcher [_ctx [key _input]]
+    key))
 
 (defn use-keys [ks]
+  ;; todo use recoil callback rather than looping over value hook (?)
   (let [store (react/useContext stc/context)]
     (reduce
      (fn [acc k]
@@ -19,21 +35,32 @@
      {}
      ks)))
 
+;; todo here have to figure out namespcae dispatch key stuff
+;; todo trying to access missing keys here. need to enforce conventions.
 (defn use-dispatch []
   (let [store (react/useContext stc/context)]
     (recoil/useRecoilCallback
      (fn [^js interface]
-       (fn [multi input]
-         (let [state-key  (first multi)
-               store-key  (keyword (namespace state-key))
-               state      (get-in store [:values-map state-key])
-               dispatch   (get-in store [:dispatch-map store-key])]
-           (if dispatch
-             (-> (.getPromise (.-snapshot interface) state)
-                 (.then (fn [curr]
-                          (.set interface state (dispatch multi curr input))
-                          (async/put! event-chan [multi input]))))
-             (throw (ex-info "State dispatch not found." {:key state-key}))))))
+       (letfn
+        [(dispatch [multi input]
+                   (let [context {:dispatch dispatch}
+                         ;; todo no always state 
+                         state-key  (if (vector? multi) (first multi) multi)
+                         state      (get-in store [:values-map state-key])
+                         reducer-fn (get-method reducer multi)
+                         action-fn  (get-method action multi)
+                         watcher-fn  (get-method watcher state-key)]
+                     (cond
+                       reducer-fn (-> (.getPromise (.-snapshot interface) state)
+                                   (.then
+                                    (fn [^js curr-val]
+                                      (let [next-val (reducer-fn curr-val [multi input])]
+                                       (.set interface state next-val)
+                                       (when watcher-fn (watcher-fn context [multi curr-val next-val]))
+                                       (async/put! event-chan [multi input])))))
+                       action-fn (action-fn context [multi input])
+                       :else (throw (ex-info "State action not found." {:key state-key})))))]
+         dispatch))
      #js [])))
 
 (defn use-keys+dispatch [ks]

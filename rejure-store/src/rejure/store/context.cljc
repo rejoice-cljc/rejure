@@ -124,41 +124,35 @@
 
      (defn create-store*
        "Create store from `state-map` and `data-sources`."
-       [state-map data-sources]
-       (reduce-kv
-        (fn [acc k {:keys [values dispatch-fn]}]
-          {:init-map  (merge (:init-map acc)
-                             (reduce-kv
-                              (fn [acc k v]
-                                (if (and (map? v) (:initial v))
-                                  (assoc acc k (:initial v))
-                                  acc))
-                              {}
-                              values))
-           :values-map (merge (:values-map acc)
+       ([state-map] (create-store* state-map {}))
+       ([state-map data-sources]
+        (reduce-kv
+         (fn [acc k {:keys [values]}]
+           {:init-map  (merge (:init-map acc)
                               (reduce-kv
-                               (fn [acc sk sv]
-                                 (assoc acc sk (store-value->recoil-value sk sv data-sources)))
+                               (fn [acc k v]
+                                 (if (and (map? v) (:initial v))
+                                   (assoc acc k (:initial v))
+                                   acc))
                                {}
                                values))
-           :dispatch-map (assoc (:dispatch-map acc) k dispatch-fn)})
-        {:init-map     {}
-         :values-map   {}
-         :distach-map  {}}
-        state-map))
+            :values-map (merge (:values-map acc)
+                               (reduce-kv
+                                (fn [acc sk sv]
+                                  (assoc acc sk (store-value->recoil-value sk sv data-sources)))
+                                {}
+                                values))})
+         {:init-map     {}
+          :values-map   {}}
+         state-map)))
 
      (comment
        (create-store*
-        {::state1 {:values {::all1 []}
-                   :dispatch-fn identity}}
-        {})
+        {::state1 {:values {::all1 []}}})
 
        (create-store*
-        {::state1 {:values {::all1 []}
-                   :dispatch-fn identity}
-         ::states2 {:values {::all2 []}
-                    :dispatch-fn identity}}
-        {}))))
+        {::state1 {:values {::all1 []}}
+         ::states2 {:values {::all2 []}}}))))
 
 #?(:clj
    (do
